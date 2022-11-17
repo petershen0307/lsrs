@@ -1,17 +1,7 @@
-use argh::FromArgs;
-
-#[derive(FromArgs)]
-/// List information about the FILEs (the current directory by default).
-/// ls [OPTION]... [FILE]...
-struct LsFlags {
-    /// enter directory or file path
-    #[argh(option)]
-    path: Option<String>,
-    /// do not ignore entries starting with .
-    #[argh(option, short = 'a')]
-    all: Option<String>,
-}
+pub mod actions;
+pub mod models;
 
 fn main() {
-    let flags: LsFlags = argh::from_env();
+    let flags: crate::models::flags::LsFlags = argh::from_env();
+    let _ = crate::actions::list::list(flags);
 }
