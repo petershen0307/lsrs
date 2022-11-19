@@ -3,5 +3,10 @@ pub mod models;
 
 fn main() {
     let flags: crate::models::flags::LsFlags = argh::from_env();
-    let _ = crate::actions::list::list(flags);
+    match crate::actions::list::list(flags) {
+        Err(e) => {
+            print!("got some error={}", e);
+        }
+        Ok(_) => {}
+    }
 }
