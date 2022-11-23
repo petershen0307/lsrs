@@ -7,6 +7,8 @@ fn main() {
         Err(e) => {
             print!("got some error={}", e);
         }
-        Ok(_) => {}
+        Ok(output) => {
+            output.print();
+        }
     }
 }
