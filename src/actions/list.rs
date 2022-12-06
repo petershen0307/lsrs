@@ -3,20 +3,27 @@ use std::fs;
 pub fn list(
     flags: crate::models::flags::LsFlags,
 ) -> std::io::Result<crate::models::result::Result> {
-    let fs_metadata = fs::metadata(&flags.path)?;
+    let entry_path = if flags.path == String::from(".") {
+        crate::models::flags::get_current_dir()
+    } else {
+        flags.path
+    };
+    let fs_metadata = fs::metadata(&entry_path)?;
     let mut output = crate::models::result::Result::new();
     if fs_metadata.is_dir() {
-        let dir = fs::read_dir(&flags.path).unwrap();
+        let dir = fs::read_dir(&entry_path).unwrap();
         for path in dir {
-            match path.unwrap().path().into_os_string().into_string() {
+            match path.unwrap().file_name().into_string() {
                 Ok(string) => {
-                    output.push(string)
+                    if flags.all || !string.starts_with(".") {
+                        output.push(string)
+                    }
                 }
                 Err(_) => {}
             }
         }
     } else {
-        output.push(flags.path)
+        output.push(entry_path)
     }
     Ok(output)
 }
