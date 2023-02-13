@@ -1,14 +1,8 @@
-pub mod actions;
+pub mod file_system;
 pub mod models;
+mod ui_cli;
+mod controller;
 
 fn main() {
-    let flags: crate::models::flags::LsFlags = argh::from_env();
-    match crate::actions::list::list(flags) {
-        Err(e) => {
-            print!("got some error={}", e);
-        }
-        Ok(output) => {
-            output.print();
-        }
-    }
+    crate::ui_cli::cli_exec::run();
 }
