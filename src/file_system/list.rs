@@ -1,15 +1,15 @@
 use std::fs;
 
 pub fn list(
-    flags: crate::models::flags::LsFlags,
-) -> std::io::Result<crate::models::result::Result> {
+    flags: crate::ui_cli::flags::LsFlags,
+) -> std::io::Result<crate::controller::result::Result> {
     let entry_path = if flags.path == String::from(".") {
-        crate::models::flags::get_current_dir()
+        crate::ui_cli::flags::get_current_dir()
     } else {
         flags.path
     };
     let fs_metadata = fs::metadata(&entry_path)?;
-    let mut output = crate::models::result::Result::new();
+    let mut output = crate::controller::result::Result::new();
     if fs_metadata.is_dir() {
         let dir = fs::read_dir(&entry_path).unwrap();
         for path in dir {

@@ -1,5 +1,4 @@
-pub fn run(){
-    let flags: crate::models::flags::LsFlags = argh::from_env();
+pub fn run(flags: crate::ui_cli::flags::LsFlags){
     match crate::file_system::list::list(flags) {
         Err(e) => {
             print!("got some error={}", e);

@@ -1,5 +1,4 @@
-pub mod file_system;
-pub mod models;
+mod file_system;
 mod ui_cli;
 mod controller;
 
