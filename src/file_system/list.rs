@@ -27,3 +27,22 @@ pub fn list(
     }
     Ok(output)
 }
+
+pub fn list_all_file_attributes(
+    entry_path: String,
+) -> std::io::Result<crate::controller::result::Result> {
+    let fs_metadata = fs::metadata(&entry_path)?;
+    let mut output = crate::controller::result::Result::new();
+    if fs_metadata.is_dir() {
+        let dir = fs::read_dir(&entry_path).unwrap();
+        for path in dir {
+            match path.unwrap().file_name().into_string() {
+                Ok(string) => output.push(string),
+                Err(_) => {}
+            }
+        }
+    } else {
+        output.push(entry_path)
+    }
+    Ok(output)
+}
