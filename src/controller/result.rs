@@ -33,6 +33,20 @@ pub struct FileAttribute {
     name: String,
 }
 
+impl Default for FileAttribute {
+    fn default() -> Self {
+        FileAttribute {
+            st_mode: 0,
+            number_link: 0,
+            user_id: 0,
+            group_id: 0,
+            size: 0,
+            modified_secs: 0,
+            name: String::from(""),
+        }
+    }
+}
+
 impl FileAttribute {
     pub fn permission_to_string(permission: libc::mode_t) -> Option<String> {
         if permission < libc::S_IXOTH || permission > libc::S_IRWXU {
@@ -59,7 +73,51 @@ impl FileAttribute {
         }
     }
     pub fn get_permission_string(&self) -> String {
-        String::from("")
+        let mut mask: u32 = 1;
+        let mut result_str = String::from("");
+        while mask < libc::S_IRWXU {
+            let m = FileAttribute::permission_to_string(self.st_mode & mask);
+            result_str = format!("{}{}", m.unwrap(), result_str);
+            mask <<= 1;
+        }
+
+        /*
+        https://linuxize.com/post/how-to-list-files-in-linux-using-the-ls-command/
+        S_IFMT
+        - - Regular file.
+        b - Block special file.
+        c - Character special file.
+        d - Directory.
+        l - Symbolic link.
+        n - Network file.
+        p - FIFO.
+        s - Socket.
+        */
+        match self.st_mode & libc::S_IFMT {
+            libc::S_IFLNK => {
+                result_str = format!("{}{}", "1", result_str);
+            }
+            libc::S_IFREG => {
+                result_str = format!("{}{}", "-", result_str);
+            }
+            libc::S_IFDIR => {
+                result_str = format!("{}{}", "d", result_str);
+            }
+            libc::S_IFCHR => {
+                result_str = format!("{}{}", "c", result_str);
+            }
+            libc::S_IFBLK => {
+                result_str = format!("{}{}", "b", result_str);
+            }
+            libc::S_IFIFO => {
+                result_str = format!("{}{}", "p", result_str);
+            }
+            libc::S_IFSOCK => {
+                result_str = format!("{}{}", "s", result_str);
+            }
+            _ => {}
+        }
+        result_str
     }
     pub fn get_user_name(&self) -> String {
         get_user_by_uid(self.user_id)
@@ -123,6 +181,25 @@ mod test_permission_to_string {
         assert_eq!(expected, result);
     }
 }
+
+#[cfg(test)]
+mod test_get_permission_string {
+    use super::*;
+    #[test]
+    fn test_0o777() {
+        // arrange
+        let f = FileAttribute {
+            st_mode: libc::S_IFREG | libc::S_IRWXO | libc::S_IRWXG | libc::S_IRWXU,
+            ..Default::default()
+        };
+        let expected = String::from("-rwxrwxrwx");
+        // act
+        let output = f.get_permission_string();
+        // assert
+        assert_eq!(expected, output);
+    }
+}
+
 // ls -l file attribute
 // Permissions  Number of links     Owner   Group   Size    Modified        Name
 // -rwxrwxrwx   1                   peter   peter   2058    Nov 17 00:33    Cargo.lock
