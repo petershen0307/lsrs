@@ -3,12 +3,14 @@ use users::{get_group_by_gid, get_user_by_uid};
 
 pub struct Result {
     files_and_folders: Vec<String>,
+    files_and_folders2: Vec<FileAttribute>,
 }
 
 impl Result {
     pub fn new() -> Result {
         return Result {
             files_and_folders: Vec::new(),
+            files_and_folders2: Vec::new(),
         };
     }
 
@@ -16,21 +18,31 @@ impl Result {
         self.files_and_folders.push(path);
     }
 
+    pub fn push2(&mut self, path: FileAttribute) {
+        self.files_and_folders2.push(path);
+    }
+
     pub fn print(&self) {
         for i in &self.files_and_folders {
             print!("{} ", i);
         }
     }
+
+    pub fn print2(&self) {
+        for i in &self.files_and_folders2 {
+            println!("{} ", i);
+        }
+    }
 }
 
 pub struct FileAttribute {
-    st_mode: u32,
-    number_link: u64,
-    user_id: u32,
-    group_id: u32,
-    size: u32,
-    modified_secs: i64,
-    name: String,
+    pub st_mode: u32,
+    pub number_link: u64,
+    pub owner_uid: u32,
+    pub group_id: u32,
+    pub size: u64,
+    pub modified_secs: i64,
+    pub name: String,
 }
 
 impl Default for FileAttribute {
@@ -38,7 +50,7 @@ impl Default for FileAttribute {
         FileAttribute {
             st_mode: 0,
             number_link: 0,
-            user_id: 0,
+            owner_uid: 0,
             group_id: 0,
             size: 0,
             modified_secs: 0,
@@ -48,9 +60,9 @@ impl Default for FileAttribute {
 }
 
 impl FileAttribute {
-    pub fn permission_to_string(permission: libc::mode_t) -> Option<String> {
+    pub fn permission_to_string_per_bit(permission: libc::mode_t) -> Option<String> {
         if permission < libc::S_IXOTH || permission > libc::S_IRWXU {
-            return None;
+            return Some(String::from("-"));
         }
         let mut alter_permission: u32 = permission;
         if permission & libc::S_IRWXU != 0 {
@@ -76,7 +88,7 @@ impl FileAttribute {
         let mut mask: u32 = 1;
         let mut result_str = String::from("");
         while mask < libc::S_IRWXU {
-            let m = FileAttribute::permission_to_string(self.st_mode & mask);
+            let m = FileAttribute::permission_to_string_per_bit(self.st_mode & mask);
             result_str = format!("{}{}", m.unwrap(), result_str);
             mask <<= 1;
         }
@@ -120,7 +132,7 @@ impl FileAttribute {
         result_str
     }
     pub fn get_user_name(&self) -> String {
-        get_user_by_uid(self.user_id)
+        get_user_by_uid(self.owner_uid)
             .unwrap()
             .name()
             .to_string_lossy()
@@ -141,6 +153,25 @@ impl FileAttribute {
     }
 }
 
+impl std::fmt::Display for FileAttribute {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // ls -l file attribute
+        // Permissions  Number of links     Owner   Group   Size    Modified        Name
+        // -rwxrwxrwx   1                   peter   peter   2058    Nov 17 00:33    Cargo.lock
+        write!(
+            f,
+            "({}, {}, {}, {}, {}, {}, {})",
+            self.get_permission_string(),
+            self.number_link,
+            self.get_user_name(),
+            self.get_group_name(),
+            self.size,
+            self.get_modified_time_string(),
+            self.name
+        )
+    }
+}
+
 #[cfg(test)]
 mod test_permission_to_string {
     use super::*;
@@ -149,7 +180,7 @@ mod test_permission_to_string {
         // arrange
         let expected = String::from("x");
         // act
-        let result = FileAttribute::permission_to_string(libc::S_IXOTH);
+        let result = FileAttribute::permission_to_string_per_bit(libc::S_IXOTH);
         // assert
         assert_eq!(expected, result.unwrap());
     }
@@ -158,7 +189,7 @@ mod test_permission_to_string {
         // arrange
         let expected = String::from("w");
         // act
-        let result = FileAttribute::permission_to_string(libc::S_IWGRP);
+        let result = FileAttribute::permission_to_string_per_bit(libc::S_IWGRP);
         // assert
         assert_eq!(expected, result.unwrap());
     }
@@ -167,7 +198,7 @@ mod test_permission_to_string {
         // arrange
         let expected = String::from("r");
         // act
-        let result = FileAttribute::permission_to_string(libc::S_IRUSR);
+        let result = FileAttribute::permission_to_string_per_bit(libc::S_IRUSR);
         // assert
         assert_eq!(expected, result.unwrap());
     }
@@ -176,7 +207,7 @@ mod test_permission_to_string {
         // arrange
         let expected = None;
         // act
-        let result = FileAttribute::permission_to_string(libc::S_IRWXU);
+        let result = FileAttribute::permission_to_string_per_bit(libc::S_IRWXU);
         // assert
         assert_eq!(expected, result);
     }
@@ -198,8 +229,17 @@ mod test_get_permission_string {
         // assert
         assert_eq!(expected, output);
     }
+    #[test]
+    fn test_0o644() {
+        // arrange
+        let f = FileAttribute {
+            st_mode: libc::S_IFREG | libc::S_IRUSR | libc::S_IWUSR | libc::S_IRGRP | libc::S_IROTH,
+            ..Default::default()
+        };
+        let expected = String::from("-rw-r--r--");
+        // act
+        let output = f.get_permission_string();
+        // assert
+        assert_eq!(expected, output);
+    }
 }
-
-// ls -l file attribute
-// Permissions  Number of links     Owner   Group   Size    Modified        Name
-// -rwxrwxrwx   1                   peter   peter   2058    Nov 17 00:33    Cargo.lock
