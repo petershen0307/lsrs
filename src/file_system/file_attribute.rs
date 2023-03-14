@@ -1,6 +1,7 @@
 use chrono::prelude::NaiveDateTime;
 use users::{get_group_by_gid, get_user_by_uid};
 
+#[derive(Clone)]
 pub struct FileAttribute {
     pub st_mode: u32,
     pub number_link: u64,
@@ -126,7 +127,7 @@ impl std::fmt::Display for FileAttribute {
         // -rwxrwxrwx   1                   peter   peter   2058    Nov 17 00:33    Cargo.lock
         write!(
             f,
-            "{}, {:3}, {}, {}, {:10}, {:19}, {}",
+            "{} {:3} {} {} {:10} {:19} {}",
             self.get_permission_string(),
             self.number_link,
             self.get_user_name(),

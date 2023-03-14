@@ -14,19 +14,8 @@ impl Result {
         self.files_and_folders.push(path);
     }
 
-    pub fn get_all_names(&self) -> Vec<String> {
-        let mut names: Vec<String> = Vec::new();
-        for i in &self.files_and_folders {
-            names.push(i.name.clone());
-        }
-        names
-    }
-
-    pub fn get_long_output(&self) -> Vec<String> {
-        let mut out: Vec<String> = Vec::new();
-        for i in &self.files_and_folders {
-            out.push(i.to_string());
-        }
-        out
+    pub fn get_contents(&self) -> Vec<FileAttribute> {
+        let temp: Vec<FileAttribute> = self.files_and_folders.clone();
+        temp
     }
 }
