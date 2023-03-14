@@ -1,6 +1,6 @@
 use std::fs;
 use std::os::linux::fs::MetadataExt;
-use crate::controller::result::FileAttribute;
+use crate::file_system::file_attribute::FileAttribute;
 
 pub fn list(
     flags: crate::ui_cli::flags::LsFlags,
