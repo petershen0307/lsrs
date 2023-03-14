@@ -126,7 +126,7 @@ impl std::fmt::Display for FileAttribute {
         // -rwxrwxrwx   1                   peter   peter   2058    Nov 17 00:33    Cargo.lock
         write!(
             f,
-            "{}, {}, {}, {}, {}, {:19}, {}",
+            "{}, {:3}, {}, {}, {:10}, {:19}, {}",
             self.get_permission_string(),
             self.number_link,
             self.get_user_name(),
