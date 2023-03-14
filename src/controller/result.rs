@@ -85,14 +85,7 @@ impl FileAttribute {
         }
     }
     pub fn get_permission_string(&self) -> String {
-        let mut mask: u32 = 1;
         let mut result_str = String::from("");
-        while mask < libc::S_IRWXU {
-            let m = FileAttribute::permission_to_string_per_bit(self.st_mode & mask);
-            result_str = format!("{}{}", m.unwrap(), result_str);
-            mask <<= 1;
-        }
-
         /*
         https://linuxize.com/post/how-to-list-files-in-linux-using-the-ls-command/
         S_IFMT
@@ -107,28 +100,35 @@ impl FileAttribute {
         */
         match self.st_mode & libc::S_IFMT {
             libc::S_IFLNK => {
-                result_str = format!("{}{}", "1", result_str);
+                result_str.push_str("1");
             }
             libc::S_IFREG => {
-                result_str = format!("{}{}", "-", result_str);
+                result_str.push_str("-");
             }
             libc::S_IFDIR => {
-                result_str = format!("{}{}", "d", result_str);
+                result_str.push_str("d");
             }
             libc::S_IFCHR => {
-                result_str = format!("{}{}", "c", result_str);
+                result_str.push_str("c");
             }
             libc::S_IFBLK => {
-                result_str = format!("{}{}", "b", result_str);
+                result_str.push_str("b");
             }
             libc::S_IFIFO => {
-                result_str = format!("{}{}", "p", result_str);
+                result_str.push_str("p");
             }
             libc::S_IFSOCK => {
-                result_str = format!("{}{}", "s", result_str);
+                result_str.push_str("s");
             }
             _ => {}
         }
+        let mut mask: u32 = libc::S_IRUSR;
+        while mask > 0 {
+            let m = FileAttribute::permission_to_string_per_bit(self.st_mode & mask);
+            result_str.push_str(&m.unwrap());
+            mask >>= 1;
+        }
+
         result_str
     }
     pub fn get_user_name(&self) -> String {
