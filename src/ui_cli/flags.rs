@@ -10,6 +10,9 @@ pub struct LsFlags {
     /// do not ignore entries starting with .
     #[argh(switch, short = 'a')]
     pub all: bool,
+    /// show the long format
+    #[argh(switch, short = 'l')]
+    pub long: bool,
 }
 
 pub fn get_current_dir() -> String {
